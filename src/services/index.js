@@ -1,3 +1,3 @@
 module.exports = {
-    AirplainService: require("./airplain-service"),
+    EmailService: require("./email-service"),
 };
