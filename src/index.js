@@ -1,8 +1,33 @@
 const express = require("express");
+
+const amqplib = require("amqplib");
+
+async function connectQueue() {
+    try {
+        const connection = await amqplib.connect("amqp://localhost");
+        const channel = await connection.createChannel()
+        await channel.assertQueue("noti-queue");
+        channel.consume("noti-queue", async(data) => {
+            const object = JSON.parse(`${Buffer.from(data.content)}`)
+            await EmailService.sendEmail(
+                "dev.bibek.25@gmail.com",
+                object.recepientEmail, 
+                object.subject,
+                object.text
+            );
+            channel.ack(data)
+        });
+    } catch (error) {  
+        console.log(error);
+        
+    }
+}
+
 const apiRouter  = require("./routes")
 const {serverConfig, Logger} = require("./config")
 
 const mailSender = require('./config/email-config');
+const { EmailService } = require("./services");
 
 const app = express();
 console.log("Bibek ray");
@@ -26,4 +51,5 @@ app.listen(serverConfig.PORT, async() => {
     //     console.log(error);
         
     // }
+    connectQueue()
 });
